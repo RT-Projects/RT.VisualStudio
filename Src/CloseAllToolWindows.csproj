@@ -7,16 +7,17 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{368580E1-9B90-4BD6-B126-B9092D9E50FB}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <StartupObject>
-    </StartupObject>
+    <StartupObject></StartupObject>
     <NoStandardLibraries>false</NoStandardLibraries>
     <AssemblyName>CloseAllToolWindows</AssemblyName>
     <DeploymentDirectory>.\bin\</DeploymentDirectory>
+    <OutputPath>..\Builds\$(Configuration)</OutputPath>
+    <IntermediateOutputPath>..\Builds\$(Configuration)\obj-$(AssemblyName)</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\Builds\$(Configuration)\obj-$(AssemblyName)</BaseIntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
-    <OutputPath>..\Builds\$(Configuration)</OutputPath>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>4</WarningLevel>
@@ -26,7 +27,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
     <Optimize>true</Optimize>
-    <OutputPath>..\Builds\$(Configuration)</OutputPath>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>4</WarningLevel>
@@ -88,10 +88,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PreBuildEvent></PreBuildEvent>
+    <PostBuildEvent></PostBuildEvent>
   </PropertyGroup>
   <ProjectExtensions />
   <Target Name="AfterBuild">
@@ -100,12 +98,9 @@
       <PdbName>$(AssemblyName).pdb</PdbName>
       <DocFileName>$(AssemblyName).xml</DocFileName>
     </PropertyGroup>
-    <Delete Condition="Exists('$(DeploymentDirectory)$(DllName)')" Files="$(DeploymentDirectory)$(DllName)">
-    </Delete>
-    <Delete Condition="Exists('$(DeploymentDirectory)$(PdbName)')" Files="$(DeploymentDirectory)$(PdbName)">
-    </Delete>
-    <Delete Condition="Exists('$(DeploymentDirectory)$(DocFileName)')" Files="$(DeploymentDirectory)$(DocFileName)">
-    </Delete>
+    <Delete Condition="Exists('$(DeploymentDirectory)$(DllName)')" Files="$(DeploymentDirectory)$(DllName)"></Delete>
+    <Delete Condition="Exists('$(DeploymentDirectory)$(PdbName)')" Files="$(DeploymentDirectory)$(PdbName)"></Delete>
+    <Delete Condition="Exists('$(DeploymentDirectory)$(DocFileName)')" Files="$(DeploymentDirectory)$(DocFileName)"></Delete>
     <Copy Condition="Exists('$(OutputPath)$(DllName)')" SourceFiles="$(OutputPath)$(DllName)" DestinationFolder="$(DeploymentDirectory)">
       <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
     </Copy>
