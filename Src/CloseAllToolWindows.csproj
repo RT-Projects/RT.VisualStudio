@@ -76,9 +76,6 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\..\..\Users\Timwi\Documents\Visual Studio 2010\Addins\CloseAllToolWindows - For Testing.AddIn">
-      <Link>CloseAllToolWindows - For Testing.AddIn</Link>
-    </Content>
     <Content Include="CloseAllToolWindows.AddIn">
       <SubType>Designer</SubType>
     </Content>
