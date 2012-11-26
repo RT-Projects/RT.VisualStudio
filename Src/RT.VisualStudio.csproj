@@ -5,12 +5,15 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30424</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{368580E1-9B90-4BD6-B126-B9092D9E50FB}</ProjectGuid>
+    <ProjectGuid>{54C786E5-FD14-4036-92AE-E9F25B71534B}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <StartupObject></StartupObject>
+    <StartupObject>
+    </StartupObject>
     <NoStandardLibraries>false</NoStandardLibraries>
-    <AssemblyName>CloseAllToolWindows</AssemblyName>
-    <DeploymentDirectory>.\bin\</DeploymentDirectory>
+    <AssemblyName>RT.VisualStudio</AssemblyName>
+    <DeploymentDirectory>..\..\..\builds\$(Configuration)\</DeploymentDirectory>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
     <OutputPath>..\Builds\$(Configuration)</OutputPath>
     <IntermediateOutputPath>..\Builds\$(Configuration)\obj-$(AssemblyName)</IntermediateOutputPath>
     <BaseIntermediateOutputPath>..\Builds\$(Configuration)\obj-$(AssemblyName)</BaseIntermediateOutputPath>
@@ -22,6 +25,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <IncrementalBuild>false</IncrementalBuild>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
@@ -29,14 +33,20 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
     <DefineConstants>TRACE</DefineConstants>
     <IncrementalBuild>false</IncrementalBuild>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <RootNamespace>CloseAllToolWindows</RootNamespace>
+    <RootNamespace>RT.VisualStudio</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Extensibility, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs">
@@ -56,9 +66,27 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
+    <COMReference Include="EnvDTE100">
+      <Guid>{26AD1324-4B7C-44BC-84F8-B86AED45729F}</Guid>
+      <VersionMajor>10</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </COMReference>
     <COMReference Include="EnvDTE80">
       <Guid>{1A31287A-4D7D-413E-8E32-3B374931BD89}</Guid>
       <VersionMajor>8</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="EnvDTE90">
+      <Guid>{2CE2370E-D744-4936-A090-3FFFE667B0E1}</Guid>
+      <VersionMajor>9</VersionMajor>
       <VersionMinor>0</VersionMinor>
       <Lcid>0</Lcid>
       <WrapperTool>primary</WrapperTool>
@@ -74,34 +102,34 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
+    <COMReference Include="stdole">
+      <Guid>{00020430-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="CloseAllToolWindows.AddIn">
+    <Content Include="RT.VisualStudio.AddIn">
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>
-    <PreBuildEvent></PreBuildEvent>
-    <PostBuildEvent></PostBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <ProjectExtensions />
   <Target Name="AfterBuild">
-    <PropertyGroup>
-      <DllName>$(AssemblyName).dll</DllName>
-      <PdbName>$(AssemblyName).pdb</PdbName>
-      <DocFileName>$(AssemblyName).xml</DocFileName>
-    </PropertyGroup>
-    <Delete Condition="Exists('$(DeploymentDirectory)$(DllName)')" Files="$(DeploymentDirectory)$(DllName)"></Delete>
-    <Delete Condition="Exists('$(DeploymentDirectory)$(PdbName)')" Files="$(DeploymentDirectory)$(PdbName)"></Delete>
-    <Delete Condition="Exists('$(DeploymentDirectory)$(DocFileName)')" Files="$(DeploymentDirectory)$(DocFileName)"></Delete>
-    <Copy Condition="Exists('$(OutputPath)$(DllName)')" SourceFiles="$(OutputPath)$(DllName)" DestinationFolder="$(DeploymentDirectory)">
-      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
-    </Copy>
-    <Copy Condition="Exists('$(OutputPath)$(PdbName)')" SourceFiles="$(OutputPath)$(PdbName)" DestinationFolder="$(DeploymentDirectory)">
-      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
-    </Copy>
-    <Copy Condition="Exists('$(OutputPath)$(DocFileName)')" SourceFiles="$(OutputPath)$(DocFileName)" DestinationFolder="$(DeploymentDirectory)">
+    <ItemGroup>
+      <AllOutputFiles Include="$(OutputPath)*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AllOutputFiles)" DestinationFiles="@(AllOutputFiles-&gt;'$(DeploymentDirectory)\%(Filename)%(Extension)')">
       <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
     </Copy>
   </Target>
