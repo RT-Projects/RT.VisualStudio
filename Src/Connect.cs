@@ -1,4 +1,4 @@
-ÿþï»¿using System;
+ï»¿using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,10 +23,10 @@ namespace RT.VisualStudio
     {
         private FontSupport[] _fontsSupported = new FontSupport[] { 
             new FontSupport { CommandName = "CourierNew", FontName = "Courier New", FontSize = 10 }, 
-            new FontSupport { CommandName = "CourierNew", FontName = "Courier New", FontSize = 10 }, 
             new FontSupport { CommandName = "Candara", FontName = "Candara", FontSize = 11 }, 
             new FontSupport { CommandName = "SegoeUI", FontName = "Segoe UI", FontSize = 11, UseBold = false }, 
-            new FontSupport { CommandName = "MaiandraGD", FontName = "Maiandra GD kun Eo", FontSize = 11 }
+            new FontSupport { CommandName = "MaiandraGD", FontName = "Maiandra GD kun Eo", FontSize = 11 },
+            new FontSupport { CommandName = "Georgia", FontName = "Georgia", FontSize = 11 }
         };
 
         private string[] _thingsToBold = new[] { "Keyword", "User Types", "User Types(Value types)", "User Types(Interfaces)", "User Types(Delegates)", "User Types(Enums)", "User Types(Type parameters)" };
@@ -200,4 +200,4 @@ namespace RT.VisualStudio
             }
         }
     }
-}
+}
