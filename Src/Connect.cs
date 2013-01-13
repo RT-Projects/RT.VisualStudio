@@ -1,11 +1,14 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using EnvDTE;
 using EnvDTE80;
 using Extensibility;
-using Microsoft.VisualStudio.CommandBars;
+using RT.Util;
+using RT.Util.ExtensionMethods;
 
 namespace RT.VisualStudio
 {
@@ -30,9 +33,11 @@ namespace RT.VisualStudio
         };
 
         private string[] _thingsToBold = new[] { "Keyword", "User Types", "User Types(Value types)", "User Types(Interfaces)", "User Types(Delegates)", "User Types(Enums)", "User Types(Type parameters)" };
+        private string[] _platformPriorities = new[] { "x86", "Any CPU", "AnyCPU" };
 
         private DTE2 _applicationObject;
         private AddIn _addInInstance;
+        private Dictionary<string, Action> _commands = new Dictionary<string, Action>();
 
         /// <summary>Implements the constructor for the Add-in object. Place your initialization code within this method.</summary>
         public Connect()
@@ -48,53 +53,175 @@ namespace RT.VisualStudio
         {
             _applicationObject = (DTE2) application;
             _addInInstance = (AddIn) addInInst;
-            Debug.Write(connectMode);
+
             if (connectMode == ext_ConnectMode.ext_cm_Startup)
             {
-                Commands2 commands = (Commands2) _applicationObject.Commands;
-                string toolsMenuName = "Tools";
-
-                //Place the command on the tools menu.
-                //Find the MenuBar command bar, which is the top-level command bar holding all the main menu items:
-                CommandBar menuBarCommandBar = ((Microsoft.VisualStudio.CommandBars.CommandBars) _applicationObject.CommandBars)["MenuBar"];
-
-                //Find the Tools command bar on the MenuBar command bar:
-                CommandBarControl toolsControl = menuBarCommandBar.Controls[toolsMenuName];
-                CommandBarPopup toolsPopup = (CommandBarPopup) toolsControl;
-
-                //This try/catch block can be duplicated if you wish to add multiple commands to be handled by your Add-in,
-                //  just make sure you also update the QueryStatus/Exec method to include the new command names.
-                try
+                CreateCommand("CloseAllToolWindows", "Close all Tool Windows", "Closes all tool windows.", () =>
                 {
-                    object[] contextGUIDS = new object[] { };
-                    //Add a command to the Commands collection:
-                    Command command = commands.AddNamedCommand2(_addInInstance, "CloseAllToolWindows", "Close all Tool Windows", "Closes all tool windows.",
-                        true, 59, ref contextGUIDS, (int) (vsCommandStatus.vsCommandStatusSupported | vsCommandStatus.vsCommandStatusEnabled), (int) vsCommandStyle.vsCommandStylePictAndText, vsCommandControlType.vsCommandControlTypeButton);
-
-                    //Add a control for the command to the tools menu:
-                    if ((command != null) && (toolsPopup != null))
-                        command.AddControl(toolsPopup.CommandBar, 1);
-                }
-                catch (ArgumentException)
-                {
-                    //If we are here, then the exception is probably because a command with that name
-                    //  already exists. If so there is no need to recreate the command and we can 
-                    //  safely ignore the exception.
-                }
+                    var windows = new List<Window>();
+                    for (int i = 1; i <= _applicationObject.Windows.Count; i++)
+                        if (_applicationObject.Windows.Item(i).Kind == "Tool")
+                            windows.Add(_applicationObject.Windows.Item(i));
+                    foreach (var window in windows)
+                        window.Close();
+                });
 
                 foreach (var font in _fontsSupported)
                 {
-                    try
+                    CreateCommand("ChangeFontTo" + font.CommandName, "Change Font to " + font.FontName, string.Format("Changes the text editor font to {0}.", font.FontName), () =>
                     {
-                        object[] contextGUIDS = new object[] { };
-                        Command command = commands.AddNamedCommand2(_addInInstance, "ChangeFontTo" + font.CommandName, "Change Font to " + font.FontName, string.Format("Changes the text editor font to {0}.", font.FontName),
-                            true, 59, ref contextGUIDS, (int) (vsCommandStatus.vsCommandStatusSupported | vsCommandStatus.vsCommandStatusEnabled), (int) vsCommandStyle.vsCommandStylePictAndText, vsCommandControlType.vsCommandControlTypeButton);
-                    }
-                    catch (ArgumentException)
-                    {
-                    }
+                        foreach (Property prop in _applicationObject.Properties["FontsAndColors", "TextEditor"])
+                        {
+                            if (prop.Name == "FontFamily")
+                                prop.Value = font.FontName;
+                            else if (prop.Name == "FontSize")
+                                prop.Value = font.FontSize;
+                            else if (prop.Name == "FontsAndColorsItems")
+                            {
+                                var o = (FontsAndColorsItems) prop.Object;
+                                foreach (ColorableItems obj in o)
+                                    if (_thingsToBold.Contains(obj.Name))
+                                    {
+                                        obj.Bold = font.UseBold;
+                                        obj.Background = 0x2000000;
+                                    }
+                            }
+                        }
+                    });
+                }
+
+                CreateCommand("ReformatXmlComments", "Reformat XML Comments", "Automatically word-wraps and reformats XML comments to conform to the RT comment style.", reformatComments);
+
+                //CreateCommand("CleanUpSolutionConfigurations", "Clean Up Solution Configurations", "Removes all solution configurations except for “Debug” and “Release”.", () =>
+                //{
+                //    var configurations = _applicationObject.Solution.SolutionBuild.SolutionConfigurations;
+
+                //    // Check if Debug|x86 and Release|x86 are present
+                //    var debug = configurations.Cast<SolutionConfiguration>().Where(sc => sc.Name == "Debug").ToArray();
+                //    var release = configurations.Cast<SolutionConfiguration>().Where(sc => sc.Name == "Release").ToArray();
+
+                //    if (debug.Length == 0 || release.Length == 0)
+                //    {
+                //        MessageBox.Show("There are no two solution configurations called “Debug” and “Release”, respectively.");
+                //        return;
+                //    }
+
+                //    var pairs = debug
+                //        .Select(d =>
+                //        {
+                //            var platform = ((dynamic) d).PlatformName;
+                //            return new
+                //            {
+                //                Debug = d,
+                //                Release = release.FirstOrDefault(r => ((dynamic) r).PlatformName == platform),
+                //                Platform = platform,
+                //                Priority = Array.IndexOf(_platformPriorities, platform)
+                //            };
+                //        })
+                //        .Where(inf => inf.Release != null)
+                //        .OrderByDescending(inf => inf.Priority)
+                //        .ToArray();
+
+                //    if (pairs.Length == 0)
+                //    {
+                //        MessageBox.Show("There are no two solution configurations called “Debug” and “Release” with the same platform.");
+                //        return;
+                //    }
+
+                //    if (pairs.Length > 1 && pairs[0].Priority == pairs[1].Priority)
+                //    {
+                //        MessageBox.Show(string.Format("There are two solution configurations with the same platform priority ({0} and {1}).", pairs[0].Platform, pairs[1].Platform));
+                //        return;
+                //    }
+
+                //    var preferred = pairs[0];
+
+                //    // Delete all other configurations
+                //    while (true)
+                //    {
+                //        try
+                //        {
+                //            var unwantedConfig = configurations.Cast<SolutionConfiguration>().FirstOrDefault(sc => sc != preferred.Debug && sc != preferred.Release);
+                //            if (unwantedConfig == null)
+                //                break;
+                //            ((SolutionConfiguration2) unwantedConfig).Delete();
+                //        }
+                //        catch (Exception e)
+                //        {
+                //            System.Diagnostics.Debugger.Break();
+                //        }
+                //    }
+
+                //    System.Diagnostics.Debugger.Break();
+                //});
+            }
+        }
+
+        private void reformatComments()
+        {
+            var doc = (TextDocument) _applicationObject.ActiveDocument.Object();
+            var startPoint = doc.CreateEditPoint();
+            startPoint.StartOfDocument();
+            var endPoint = doc.CreateEditPoint();
+            endPoint.EndOfDocument();
+            var source = startPoint.GetText(endPoint);
+            var text = Regex.Split(source, @"\r?\n", RegexOptions.Singleline);
+            var isComment = text.Select(line => Regex.IsMatch(line, @"^\s*///", RegexOptions.Multiline)).ToArray();
+            var result = new List<string>();
+            foreach (var gr in isComment.GroupConsecutive())
+            {
+                if (!gr.Key)
+                {
+                    result.AddRange(text.Skip(gr.Index).Take(gr.Count));
+                    continue;
+                }
+
+                var indentationLength = Regex.Match(text[gr.Index], @"^\s*", RegexOptions.Multiline).Length;
+                var indentation = new string(' ', indentationLength) + "/// ";
+                var wrapWidth = 126 - indentation.Length;
+                var wrap = Ut.Lambda((string str, int width) => str.Trim().WordWrap(width).ToArray());
+                var chunk = XElement.Parse("<item>{0}</item>".Fmt(text.Subarray(gr.Index, gr.Count)
+                    .Select(line => Regex.Replace(line, @"\s*/// ", "", RegexOptions.Multiline))
+                    .JoinString(Environment.NewLine)), LoadOptions.PreserveWhitespace);
+                var elements = chunk.Elements().ToArray();
+                foreach (var elem in elements)
+                    elem.Process();
+
+                // Heuristic: If there is *only* a summary tag, and it fits on one line, make it compact
+                if (elements.Length == 1 && elements[0].Name.LocalName == "summary" && wrap("<summary>" + elements[0].GetContent(), wrapWidth).Length == 1)
+                    result.Add("{0}<summary>{1}</summary>".Fmt(indentation, elements[0].GetContent().Trim()));
+                else
+                {
+                    var retStr = elements.Select(elem => "{0}{1}{2}</{3}>".Fmt(
+                        elem.GetTag(),
+                        Environment.NewLine,
+                        wrap(elem.GetContent(), wrapWidth - 4).JoinString(Environment.NewLine).Indent(4),
+                        elem.Name.LocalName
+                    )).JoinString(Environment.NewLine);
+                    result.Add(Regex.Replace(retStr, @"^", indentation, RegexOptions.Multiline));
                 }
             }
+
+            var resultStr = result.JoinString(Environment.NewLine);
+            if (resultStr != source)
+                startPoint.ReplaceText(endPoint, resultStr, (int) vsEPReplaceTextOptions.vsEPReplaceTextKeepMarkers);
+        }
+
+        private void CreateCommand(string commandName, string readableCommandName, string commandDescription, Action action)
+        {
+            try
+            {
+                object[] blah = { };
+                ((Commands2) _applicationObject.Commands).AddNamedCommand2(_addInInstance, commandName, readableCommandName, commandDescription, true, Type.Missing, ref blah, 3, 3, vsCommandControlType.vsCommandControlTypeButton);
+            }
+            catch (ArgumentException)
+            {
+                //If we are here, then the exception is probably because a command with that name
+                //  already exists. If so there is no need to recreate the command and we can 
+                //  safely ignore the exception.
+            }
+
+            _commands[typeof(Connect).FullName + "." + commandName] = action;
         }
 
         /// <summary>Implements the OnDisconnection method of the IDTExtensibility2 interface. Receives notification that the Add-in is being unloaded.</summary>
@@ -136,17 +263,11 @@ namespace RT.VisualStudio
         {
             if (neededText == vsCommandStatusTextWanted.vsCommandStatusTextWantedNone)
             {
-                if (commandName == "RT.VisualStudio.Connect.CloseAllToolWindows")
+                if (_commands.ContainsKey(commandName))
                 {
                     status = (vsCommandStatus) vsCommandStatus.vsCommandStatusSupported | vsCommandStatus.vsCommandStatusEnabled;
                     return;
                 }
-                foreach (var font in _fontsSupported)
-                    if (commandName == "RT.VisualStudio.Connect.ChangeFontTo" + font.CommandName)
-                    {
-                        status = (vsCommandStatus) vsCommandStatus.vsCommandStatusSupported | vsCommandStatus.vsCommandStatusEnabled;
-                        return;
-                    }
             }
         }
 
@@ -162,40 +283,57 @@ namespace RT.VisualStudio
             handled = false;
             if (executeOption == vsCommandExecOption.vsCommandExecOptionDoDefault)
             {
-                if (commandName == "RT.VisualStudio.Connect.CloseAllToolWindows")
+                if (_commands.ContainsKey(commandName))
                 {
-                    var windows = new List<Window>();
-                    for (int i = 1; i <= _applicationObject.Windows.Count; i++)
-                        if (_applicationObject.Windows.Item(i).Kind == "Tool")
-                            windows.Add(_applicationObject.Windows.Item(i));
-                    foreach (var window in windows)
-                        window.Close();
+                    _commands[commandName]();
                     handled = true;
                 }
-
-                foreach (var font in _fontsSupported)
-                    if (commandName == "RT.VisualStudio.Connect.ChangeFontTo" + font.CommandName)
-                        setFont(font);
             }
         }
+    }
 
-        private void setFont(FontSupport font)
+    static class Extensionification
+    {
+        public static string GetContent(this XElement element)
         {
-            foreach (Property prop in _applicationObject.Properties["FontsAndColors", "TextEditor"])
+            return element.Nodes().Select(n => n.ToString()).JoinString();
+        }
+
+        public static string GetTag(this XElement element)
+        {
+            var sb = new StringBuilder();
+            sb.Append("<");
+            sb.Append(element.Name.LocalName);
+            foreach (var attr in element.Attributes())
+                sb.Append(@" {0}=""{1}""".Fmt(attr.Name.LocalName, attr.Value.HtmlEscape()));
+            sb.Append(">");
+            return sb.ToString();
+        }
+
+        public static void Process(this XElement elem)
+        {
+            var leaveNewLines = elem.Elements("para").Any() || elem.Elements("code").Any() || elem.Elements("list").Any();
+            foreach (var node in elem.Nodes())
             {
-                if (prop.Name == "FontFamily")
-                    prop.Value = font.FontName;
-                else if (prop.Name == "FontSize")
-                    prop.Value = font.FontSize;
-                else if (prop.Name == "FontsAndColorsItems")
+                if (node is XText && !leaveNewLines)
                 {
-                    var o = (FontsAndColorsItems) prop.Object;
-                    foreach (ColorableItems obj in o)
-                        if (_thingsToBold.Contains(obj.Name))
-                        {
-                            obj.Bold = font.UseBold;
-                            obj.Background = 0x2000000;
-                        }
+                    var xText = (XText) node;
+                    xText.Value = Regex.Replace(xText.Value, @"\r?\n", " ");
+                }
+                else if (node is XElement)
+                {
+                    var xElement = (XElement) node;
+                    if (xElement.Name.LocalName == "para")
+                        xElement.Process();
+                    else if (xElement.Name.LocalName == "list")
+                    {
+                        foreach (var subElem in xElement.Elements("item"))
+                            foreach (var subElem2 in subElem.Elements("description"))
+                            {
+                                subElem2.Process();
+                                subElem2.FirstNode.AddBeforeSelf(new XText(Environment.NewLine + "    "));
+                            }
+                    }
                 }
             }
         }
