@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
+#warning TODO: remove the space before the closing tag like <see cref="Blah" />
+
 namespace ConvertCommentStyle
 {
     class Program
@@ -34,22 +36,26 @@ namespace ConvertCommentStyle
 
                 var indentationLength = Regex.Match(text[gr.Index], @"^\s*", RegexOptions.Multiline).Length;
                 var indentation = new string(' ', indentationLength) + "/// ";
-                var wrapWidth = 130 - indentationLength;
-                var wrap = Ut.Lambda((string str) => str.Trim().WordWrap(wrapWidth).ToArray());
-                var chunk = XElement.Parse("<item>{0}</item>".Fmt(text.Subarray(gr.Index, gr.Count).Select(line => Regex.Replace(line, @"\s*/// ", "", RegexOptions.Multiline)).JoinString(Environment.NewLine)), LoadOptions.PreserveWhitespace);
+                var wrapWidth = 126 - indentation.Length;
+                var wrap = Ut.Lambda((string str, int width) => str.Trim().WordWrap(width).ToArray());
+                var chunk = XElement.Parse("<item>{0}</item>".Fmt(text.Subarray(gr.Index, gr.Count)
+                    .Select(line => Regex.Replace(line, @"\s*/// ", "", RegexOptions.Multiline))
+                    .JoinString(Environment.NewLine)), LoadOptions.PreserveWhitespace);
                 var elements = chunk.Elements().ToArray();
                 foreach (var elem in elements)
                     process(elem);
 
-                IEnumerable<string> ret;
-
                 // Heuristic: If there is *only* a summary tag, and it fits on one line, make it compact
-                string[] wrapped;
-                if (elements.Length == 1 && elements[0].Name.LocalName == "summary" && (wrapped = wrap(elements[0].GetContent())).Length == 1)
-                    result.Add("{0}<summary>{1}</summary>".Fmt(indentation, wrapped[0]));
+                if (elements.Length == 1 && elements[0].Name.LocalName == "summary" && wrap("<summary>" + elements[0].GetContent(), wrapWidth).Length == 1)
+                    result.Add("{0}<summary>{1}</summary>".Fmt(indentation, elements[0].GetContent().Trim()));
                 else
                 {
-                    var retStr = elements.Select(elem => "{0}{3}{1}</{2}>".Fmt(elem.GetTag(), wrap(elem.GetContent()).JoinString(Environment.NewLine).Indent(4), elem.Name.LocalName, Environment.NewLine)).JoinString(Environment.NewLine);
+                    var retStr = elements.Select(elem => "{0}{3}{1}</{2}>".Fmt(
+                        elem.GetTag(),
+                        wrap(elem.GetContent(), wrapWidth - 4).JoinString(Environment.NewLine).Indent(4),
+                        elem.Name.LocalName,
+                        Environment.NewLine
+                    )).JoinString(Environment.NewLine);
                     result.Add(Regex.Replace(retStr, @"^", indentation, RegexOptions.Multiline));
                 }
             }
