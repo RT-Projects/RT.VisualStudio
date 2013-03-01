@@ -249,6 +249,14 @@ namespace RT.VisualStudio
                     if (!first)
                         sb.AppendLine();
                     first = false;
+
+                    if (!elem.Nodes().Any())
+                    {
+                        // Self-closing tag
+                        sb.AppendLine("<{0}{1}/>".Fmt(elem.Name.LocalName, elem.Attributes().Select(attr => @" {0}=""{1}""".Fmt(attr.Name.LocalName, attr.Value.HtmlEscape())).JoinString()));
+                        continue;
+                    }
+
                     sb.AppendLine("<{0}{1}>".Fmt(elem.Name.LocalName, elem.Attributes().Select(attr => @" {0}=""{1}""".Fmt(attr.Name.LocalName, attr.Value.HtmlEscape())).JoinString()));
 
                     string inner;
@@ -292,7 +300,8 @@ namespace RT.VisualStudio
                     else
                     {
                         sb.Append(lastToAdd);
-                        lastToAdd = element.ToString();
+                        // When outputting tags such as <see cref="..."/>, remove the extra space before the self-closing slash
+                        lastToAdd = element.ToString().Replace(" />", "/>");
                     }
                     first = false;
                 }
