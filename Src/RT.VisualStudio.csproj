@@ -11,7 +11,7 @@
     </StartupObject>
     <NoStandardLibraries>false</NoStandardLibraries>
     <AssemblyName>RT.VisualStudio</AssemblyName>
-    <DeploymentDirectory>..\..\..\builds\$(Configuration)\</DeploymentDirectory>
+    <DeploymentDirectory>..\..\builds\$(Configuration)\</DeploymentDirectory>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <OutputPath>..\Builds\$(Configuration)</OutputPath>
