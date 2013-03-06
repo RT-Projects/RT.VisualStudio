@@ -292,10 +292,10 @@ namespace RT.VisualStudio
                         var value = !first ? text.Value : keepIndentation ? text.Value.TrimStart('\r', '\n') : text.Value.TrimStart();
                         sb.Append(lastToAdd);
                         if (keepIndentation)
-                            lastToAdd = value;
+                            lastToAdd = value.HtmlEscape(leaveSingleQuotesAlone: true, leaveDoubleQuotesAlone: true);
                         else
                             // Replace all “lone” newlines with spaces
-                            lastToAdd = Regex.Replace(value, @"(?<!\n) *\r?\n *(?!\r?\n)", " ");
+                            lastToAdd = Regex.Replace(value, @"(?<!\n) *\r?\n *(?!\r?\n)", " ").HtmlEscape(leaveSingleQuotesAlone: true, leaveDoubleQuotesAlone: true);
                     }
                     else
                     {
