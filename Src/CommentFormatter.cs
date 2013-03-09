@@ -92,7 +92,6 @@ namespace RT.VisualStudio
                     first = false;
                     sb.Append(formatTag(elem, true, () =>
                     {
-                        string inner;
                         if (elem.Name.LocalName != "list")
                             return reformatComment(elem.Nodes(), false, keepIndentation: elem.Name.LocalName == "code").Indent(4);
 
