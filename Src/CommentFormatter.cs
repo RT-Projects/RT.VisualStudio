@@ -35,7 +35,7 @@ namespace RT.VisualStudio
                     var comment = XElement.Parse(
                         "<outer>{0}</outer>".Fmt(
                             text.Skip(gr.Index).Take(gr.Count)
-                                .Select(line => Regex.Replace(line, @"^\s*/// ", "", RegexOptions.Multiline))
+                                .Select(line => Regex.Replace(line, @"^\s*///", "", RegexOptions.Multiline))
                                 .JoinString(Environment.NewLine)
                         ),
                         LoadOptions.PreserveWhitespace
