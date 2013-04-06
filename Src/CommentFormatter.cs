@@ -145,7 +145,10 @@ namespace RT.VisualStudio
                 if (firstBlock != null && firstInline != null)
                     throw new InvalidOperationException("“{0}” is block-level, but “{1}” is inline-level.".Fmt(firstBlock.Name.LocalName, firstInline.Name.LocalName));
                 var firstUnknown = (XElement) nodes.FirstOrDefault(n => n is XElement && !isIn(n, _blockLevelTags) && !isIn(n, _inlineTags));
-                throw new InvalidOperationException("I don’t know whether “{0}” is inline-level or block-level.".Fmt(firstUnknown.Name.LocalName));
+                if (firstUnknown != null)
+                    throw new InvalidOperationException("I don’t know whether “{0}” is inline-level or block-level.".Fmt(firstUnknown.Name.LocalName));
+                else
+                    throw new InvalidOperationException("This comment contains an element that contains both block-level elements as well as raw text. Wrap the text in <para>."    );
             }
         }
 
