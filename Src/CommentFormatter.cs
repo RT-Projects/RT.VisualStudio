@@ -14,18 +14,28 @@ namespace RT.VisualStudio
         private static string[] _inlineTags = new[] { "see", "paramref", "typeparamref", "c" };
         private static string[] _blockLevelTags = new[] { "code", "para", "list", "description" };
 
+        private enum CommentType { None, CSharp, VB }
+
         public static string ReformatComments(string source)
         {
             var text = Regex.Split(source.TrimEnd(), @"\r?\n", RegexOptions.Singleline);
-            var isComment = text.Select(line => Regex.IsMatch(line, @"^\s*///", RegexOptions.Multiline)).ToArray();
+            var commentTypes = text
+                .Select(line => new { Line = line, Match = Regex.Match(line, @"^\s*(///|''')(.*)$") })
+                .Select(inf => new
+                {
+                    Line = inf.Line,
+                    Type = inf.Match.Success ? inf.Match.Groups[1].Value == "///" ? CommentType.CSharp : CommentType.VB : CommentType.None,
+                    Rest = inf.Match.Success ? inf.Match.Groups[2].Value : null
+                })
+                .ToArray();
             var result = new StringBuilder();
 
-            foreach (var gr in isComment.GroupConsecutive())
+            foreach (var gr in commentTypes.GroupConsecutiveBy(inf => inf.Type))
             {
-                if (!gr.Key)
+                if (gr.Key == CommentType.None)
                 {
-                    foreach (var line in text.Skip(gr.Index).Take(gr.Count))
-                        result.AppendLine(line);
+                    foreach (var inf in gr)
+                        result.AppendLine(inf.Line);
                     continue;
                 }
 
@@ -33,16 +43,14 @@ namespace RT.VisualStudio
                 {
                     var indentationLength = Regex.Match(text[gr.Index], @"^\s*", RegexOptions.Multiline).Length;
                     var comment = XElement.Parse(
-                        "<outer>{0}</outer>".Fmt(
-                            text.Skip(gr.Index).Take(gr.Count)
-                                .Select(line => Regex.Replace(line, @"^\s*///", "", RegexOptions.Multiline))
-                                .JoinString(Environment.NewLine)
-                        ),
+                        "<outer>{0}</outer>".Fmt(gr.Select(inf => inf.Rest).JoinString(Environment.NewLine)),
                         LoadOptions.PreserveWhitespace
                     );
 
                     var wrapWidth = 126 - indentationLength;
-                    var indentation = new string(' ', indentationLength) + "/// ";
+                    var indentation = new string(' ', indentationLength) + (
+                        gr.Key == CommentType.CSharp ? "/// " :
+                        gr.Key == CommentType.VB ? "''' " : Ut.Throw<string>(new InvalidOperationException()));
 
                     // Special case: single <summary> tag that fits on a line
                     if (comment.Elements().Count() == 1 && comment.Elements().First().Name.LocalName == "summary" && !comment.Elements().First().Attributes().Any())
@@ -148,7 +156,7 @@ namespace RT.VisualStudio
                 if (firstUnknown != null)
                     throw new InvalidOperationException("I don’t know whether “{0}” is inline-level or block-level.".Fmt(firstUnknown.Name.LocalName));
                 else
-                    throw new InvalidOperationException("This comment contains an element that contains both block-level elements as well as raw text. Wrap the text in <para>."    );
+                    throw new InvalidOperationException("This comment contains an element that contains both block-level elements as well as raw text. Wrap the text in <para>.");
             }
         }
 
