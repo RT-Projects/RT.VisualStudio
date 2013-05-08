@@ -92,69 +92,6 @@ namespace RT.VisualStudio
                 }
 
                 CreateCommand("ReformatXmlComments", "Reformat XML Comments", "Automatically word-wraps and reformats XML comments to conform to the RT comment style.", reformatComments);
-
-                //CreateCommand("CleanUpSolutionConfigurations", "Clean Up Solution Configurations", "Removes all solution configurations except for “Debug” and “Release”.", () =>
-                //{
-                //    var configurations = _applicationObject.Solution.SolutionBuild.SolutionConfigurations;
-
-                //    // Check if Debug|x86 and Release|x86 are present
-                //    var debug = configurations.Cast<SolutionConfiguration>().Where(sc => sc.Name == "Debug").ToArray();
-                //    var release = configurations.Cast<SolutionConfiguration>().Where(sc => sc.Name == "Release").ToArray();
-
-                //    if (debug.Length == 0 || release.Length == 0)
-                //    {
-                //        MessageBox.Show("There are no two solution configurations called “Debug” and “Release”, respectively.");
-                //        return;
-                //    }
-
-                //    var pairs = debug
-                //        .Select(d =>
-                //        {
-                //            var platform = ((dynamic) d).PlatformName;
-                //            return new
-                //            {
-                //                Debug = d,
-                //                Release = release.FirstOrDefault(r => ((dynamic) r).PlatformName == platform),
-                //                Platform = platform,
-                //                Priority = Array.IndexOf(_platformPriorities, platform)
-                //            };
-                //        })
-                //        .Where(inf => inf.Release != null)
-                //        .OrderByDescending(inf => inf.Priority)
-                //        .ToArray();
-
-                //    if (pairs.Length == 0)
-                //    {
-                //        MessageBox.Show("There are no two solution configurations called “Debug” and “Release” with the same platform.");
-                //        return;
-                //    }
-
-                //    if (pairs.Length > 1 && pairs[0].Priority == pairs[1].Priority)
-                //    {
-                //        MessageBox.Show(string.Format("There are two solution configurations with the same platform priority ({0} and {1}).", pairs[0].Platform, pairs[1].Platform));
-                //        return;
-                //    }
-
-                //    var preferred = pairs[0];
-
-                //    // Delete all other configurations
-                //    while (true)
-                //    {
-                //        try
-                //        {
-                //            var unwantedConfig = configurations.Cast<SolutionConfiguration>().FirstOrDefault(sc => sc != preferred.Debug && sc != preferred.Release);
-                //            if (unwantedConfig == null)
-                //                break;
-                //            ((SolutionConfiguration2) unwantedConfig).Delete();
-                //        }
-                //        catch (Exception e)
-                //        {
-                //            System.Diagnostics.Debugger.Break();
-                //        }
-                //    }
-
-                //    System.Diagnostics.Debugger.Break();
-                //});
             }
         }
 
@@ -180,9 +117,9 @@ namespace RT.VisualStudio
             }
             catch (ArgumentException)
             {
-                //If we are here, then the exception is probably because a command with that name
-                //  already exists. If so there is no need to recreate the command and we can 
-                //  safely ignore the exception.
+                // If we are here, then the exception is probably because a command with that name
+                // already exists. If so there is no need to recreate the command and we can 
+                // safely ignore the exception.
             }
 
             _commands[typeof(Connect).FullName + "." + commandName] = action;
