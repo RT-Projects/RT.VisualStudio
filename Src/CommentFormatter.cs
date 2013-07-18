@@ -66,7 +66,8 @@ namespace RT.VisualStudio
                         }
                     }
 
-                    var chunks = reformatComment(comment.Nodes(), true).Trim().Replace("\r\n", "\n").Replace("\n", "\r\n").Split(Environment.NewLine);
+                    // Exclude the end tags from the wrap width
+                    var chunks = reformatComment(comment.Nodes(), true).Trim().Split(Environment.NewLine);
                     foreach (var chunkF in chunks)
                     {
                         var chunk = chunkF;
