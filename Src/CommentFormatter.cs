@@ -47,7 +47,7 @@ namespace RT.VisualStudio
                         LoadOptions.PreserveWhitespace
                     );
 
-                    var wrapWidth = 126 - indentationLength;
+                    var wantedWidth = 126;
                     var indentation = new string(' ', indentationLength) + (
                         gr.Key == CommentType.CSharp ? "/// " :
                         gr.Key == CommentType.VB ? "''' " : Ut.Throw<string>(new InvalidOperationException()));
@@ -56,8 +56,7 @@ namespace RT.VisualStudio
                     if (comment.Elements().Count() == 1 && comment.Elements().First().Name.LocalName == "summary" && !comment.Elements().First().Attributes().Any())
                     {
                         var summary = reformatComment(comment.Elements().First().Nodes(), false);
-                        var wrapped = summary.WordWrap(wrapWidth - 4);
-                        if (!wrapped.Skip(1).Any())
+                        if (indentation.Length + "<summary>".Length + summary.Length <= wantedWidth)
                         {
                             result.Append(indentation);
                             result.Append("<summary>");
@@ -67,8 +66,19 @@ namespace RT.VisualStudio
                         }
                     }
 
-                    foreach (var line in reformatComment(comment.Nodes(), true).Trim().WordWrap(wrapWidth))
-                        result.AppendLine(indentation + line);
+                    var chunks = reformatComment(comment.Nodes(), true).Trim().Replace("\r\n", "\n").Replace("\n", "\r\n").Split(Environment.NewLine);
+                    foreach (var chunkF in chunks)
+                    {
+                        var chunk = chunkF;
+                        var endtag = Regex.Match(chunk, @"</\w+>$");
+                        if (endtag.Success)
+                            chunk = chunk.Substring(0, endtag.Index);
+                        var lines = chunk.WordWrap(wantedWidth - indentation.Length).ToList();
+                        if (endtag.Success)
+                            lines[lines.Count - 1] += endtag.Value;
+                        foreach (var line in lines)
+                            result.AppendLine(indentation + line);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -142,9 +152,7 @@ namespace RT.VisualStudio
                 }
                 sb.Append(lastToAdd.TrimEnd());
 
-                var result = sb.ToString();
-                var commonIndentation = Regex.Matches(result, @"^ *", RegexOptions.Multiline).Cast<Match>().Min(m => m.Length);
-                return Regex.Replace(result, "^" + new string(' ', commonIndentation), "", RegexOptions.Multiline);
+                return setIndentation(sb.ToString(), 0);
             }
             else
             {
@@ -158,6 +166,40 @@ namespace RT.VisualStudio
                 else
                     throw new InvalidOperationException("This comment contains an element that contains both block-level elements as well as raw text. Wrap the text in <para>.");
             }
+        }
+
+        private static string setIndentation(string text, int indent)
+        {
+            var lines = text.Split("\r\n", "\r", "\n");
+            int minIndent = int.MaxValue;
+            foreach (var line in lines)
+            {
+                int pos = 0;
+                while (pos < minIndent)
+                {
+                    if (pos == line.Length)
+                    {
+                        pos = int.MaxValue;
+                        break;
+                    }
+                    if (line[pos] != ' ')
+                        break;
+                    pos++;
+                }
+                if (minIndent > pos)
+                    minIndent = pos;
+            }
+
+            var result = new StringBuilder();
+            var indentStr = new string(' ', indent);
+            foreach (var line in lines)
+            {
+                if (line.Trim() == "")
+                    result.AppendLine();
+                else
+                    result.AppendLine(indentStr + line.Substring(minIndent));
+            }
+            return result.ToString().Trim('\r', '\n');
         }
 
         private static string formatTag(XElement elem, bool blockLevel, Func<string> inside)
