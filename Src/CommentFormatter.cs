@@ -71,12 +71,12 @@ namespace RT.VisualStudio
                     foreach (var chunkF in chunks)
                     {
                         var chunk = chunkF;
-                        var endtag = Regex.Match(chunk, @"</\w+>$");
-                        if (endtag.Success)
-                            chunk = chunk.Substring(0, endtag.Index);
+                        var endtags = Regex.Match(chunk, @"(</\w+>)+$");
+                        if (endtags.Success)
+                            chunk = chunk.Substring(0, endtags.Index);
                         var lines = chunk.WordWrap(wantedWidth - indentation.Length).ToList();
-                        if (endtag.Success)
-                            lines[lines.Count - 1] += endtag.Value;
+                        if (endtags.Success)
+                            lines[lines.Count - 1] += endtags.Value;
                         foreach (var line in lines)
                             result.AppendLine(indentation + line);
                     }
