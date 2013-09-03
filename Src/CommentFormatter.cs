@@ -66,19 +66,37 @@ namespace RT.VisualStudio
                         }
                     }
 
-                    // Exclude the end tags from the wrap width
-                    var chunks = reformatComment(comment.Nodes(), true).Trim().Split(Environment.NewLine);
-                    foreach (var chunkF in chunks)
+                    var lines = reformatComment(comment.Nodes(), true).Trim().Split(Environment.NewLine);
+                    var inCode = false;
+                    foreach (var lineF in lines)
                     {
-                        var chunk = chunkF;
-                        var endtags = Regex.Match(chunk, @"(</\w+>)+$");
+                        var line = lineF;
+
+                        if (line.Contains("<code"))
+                            inCode = true;
+                        var wasInCode = inCode;
+                        if (line.Contains("</code>"))
+                            inCode = false;
+
+                        if (wasInCode)
+                        {
+                            result.Append(indentation);
+                            result.AppendLine(line);
+                            continue;
+                        }
+
+                        // Exclude the end tags from the wrap width
+                        var endtags = Regex.Match(line, @"(</\w+>)+$");
                         if (endtags.Success)
-                            chunk = chunk.Substring(0, endtags.Index);
-                        var lines = chunk.WordWrap(wantedWidth - indentation.Length).ToList();
+                            line = line.Substring(0, endtags.Index);
+                        var wrappedLines = line.WordWrap(wantedWidth - indentation.Length).ToList();
                         if (endtags.Success)
-                            lines[lines.Count - 1] += endtags.Value;
-                        foreach (var line in lines)
-                            result.AppendLine(indentation + line);
+                            wrappedLines[wrappedLines.Count - 1] += endtags.Value;
+                        foreach (var wrappedLine in wrappedLines)
+                        {
+                            result.Append(indentation);
+                            result.AppendLine(wrappedLine);
+                        }
                     }
                 }
                 catch (Exception e)
