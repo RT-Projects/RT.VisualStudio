@@ -77,24 +77,26 @@ namespace RT.VisualStudio
 
                         if (inCode)
                         {
+                            // Append the code without word-wrapping
                             result.Append(indentation);
                             result.AppendLine(line);
                             if (line.Contains("</code>"))
                                 inCode = false;
-                            continue;
                         }
-
-                        // Exclude the end tags from the wrap width
-                        var endtags = Regex.Match(line, @"(</\w+>)+$");
-                        if (endtags.Success)
-                            line = line.Substring(0, endtags.Index);
-                        var wrappedLines = line.WordWrap(wantedWidth - indentation.Length).ToList();
-                        if (endtags.Success)
-                            wrappedLines[wrappedLines.Count - 1] += endtags.Value;
-                        foreach (var wrappedLine in wrappedLines)
+                        else
                         {
-                            result.Append(indentation);
-                            result.AppendLine(wrappedLine);
+                            // Append the lines with word-wrapping, while excluding the end tags from the wrap width
+                            var endtags = Regex.Match(line, @"(</\w+>)+$");
+                            if (endtags.Success)
+                                line = line.Substring(0, endtags.Index);
+                            var wrappedLines = line.WordWrap(wantedWidth - indentation.Length).ToList();
+                            if (endtags.Success)
+                                wrappedLines[wrappedLines.Count - 1] += endtags.Value;
+                            foreach (var wrappedLine in wrappedLines)
+                            {
+                                result.Append(indentation);
+                                result.AppendLine(wrappedLine);
+                            }
                         }
                     }
                 }
