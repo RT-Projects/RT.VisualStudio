@@ -74,14 +74,13 @@ namespace RT.VisualStudio
 
                         if (line.Contains("<code"))
                             inCode = true;
-                        var wasInCode = inCode;
-                        if (line.Contains("</code>"))
-                            inCode = false;
 
-                        if (wasInCode)
+                        if (inCode)
                         {
                             result.Append(indentation);
                             result.AppendLine(line);
+                            if (line.Contains("</code>"))
+                                inCode = false;
                             continue;
                         }
 
