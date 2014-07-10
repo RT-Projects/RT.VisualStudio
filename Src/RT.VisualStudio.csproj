@@ -137,8 +137,5 @@
     <ItemGroup>
       <AllOutputFiles Include="$(OutputPath)*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(AllOutputFiles)" DestinationFiles="@(AllOutputFiles-&gt;'$(DeploymentDirectory)\%(Filename)%(Extension)')">
-      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
-    </Copy>
   </Target>
 </Project>
