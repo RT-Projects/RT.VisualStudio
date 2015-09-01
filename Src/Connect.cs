@@ -25,12 +25,13 @@ namespace RT.VisualStudio
     public class Connect : IDTExtensibility2, IDTCommandTarget
     {
         private FontSupport[] _fontsSupported = Ut.NewArray(
-            new FontSupport { CommandName = "CourierNew", FontName = "Courier New", FontSize = 10 },
+            new FontSupport { CommandName = "Cambria", FontName = "Cambria", FontSize = 12, UseBold = false },
             new FontSupport { CommandName = "Candara", FontName = "Candara", FontSize = 11 },
-            new FontSupport { CommandName = "SegoeUI", FontName = "Segoe UI", FontSize = 11, UseBold = false },
-            new FontSupport { CommandName = "MaiandraGD", FontName = "Maiandra GD kun Eo", FontSize = 11, UseBold = false },
+            new FontSupport { CommandName = "CourierNew", FontName = "Courier New", FontSize = 10 },
             new FontSupport { CommandName = "Georgia", FontName = "Georgia", FontSize = 11, UseBold = false },
-            new FontSupport { CommandName = "OpenSans", FontName = "Open Sans", FontSize = 10, UseBold = false }
+            new FontSupport { CommandName = "MaiandraGD", FontName = "Maiandra GD kun Eo", FontSize = 11, UseBold = false },
+            new FontSupport { CommandName = "OpenSans", FontName = "Open Sans", FontSize = 10, UseBold = false },
+            new FontSupport { CommandName = "SegoeUI", FontName = "Segoe UI", FontSize = 11, UseBold = false }
         );
 
         private string[] _thingsToBold = new[] { "Keyword", "User Types", "User Types(Value types)", "User Types(Interfaces)", "User Types(Delegates)", "User Types(Enums)", "User Types(Type parameters)" };
