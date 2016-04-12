@@ -115,7 +115,7 @@ namespace RT.VisualStudio
         {
             var sb = new StringBuilder();
 
-            var isIn = Ut.Lambda((XNode node, string[] names) => names.Contains(((XElement) node).Name.LocalName));
+            Func<XNode, string[], bool> isIn = (XNode node, string[] names) => names.Contains(((XElement) node).Name.LocalName);
 
             if (topLevel || nodes.All(n => (n is XText && string.IsNullOrWhiteSpace(((XText) n).Value)) || (n is XElement && !isIn(n, _inlineTags))) && nodes.Any(n => n is XElement && isIn(n, _blockLevelTags)))
             {
