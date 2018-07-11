@@ -125,16 +125,5 @@ namespace RT.VisualStudio
 
             base.Initialize();
         }
-
-        private void msg(string message, string title = "Look")
-        {
-            VsShellUtilities.ShowMessageBox(
-                this,
-                message,
-                title,
-                OLEMSGICON.OLEMSGICON_INFO,
-                OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-        }
     }
 }
