@@ -34,7 +34,9 @@ namespace RT.VisualStudio
         private FontSupport[] _fontsSupported = Ut.NewArray(
             new FontSupport { CommandName = "CourierNew", FontName = "Courier New", FontSize = 10 },
             new FontSupport { CommandName = "Cambria", FontName = "Cambria", FontSize = 12, UseBold = false },
-            new FontSupport { CommandName = "Georgia", FontName = "Georgia", FontSize = 11, UseBold = false }
+            new FontSupport { CommandName = "Georgia", FontName = "Georgia", FontSize = 11, UseBold = false },
+            new FontSupport { CommandName = "WorkSansLight", FontName = "Work Sans Light", FontSize = 11, UseBold = false },
+            new FontSupport { CommandName = "WorkSansLightWithBold", FontName = "Work Sans Light", FontSize = 11, UseBold = true }
         );
         private string[] _thingsToBold = new[] { "Keyword", "User Types", "User Types(Value types)", "User Types(Interfaces)", "User Types(Delegates)", "User Types(Enums)", "User Types(Type parameters)" };
 

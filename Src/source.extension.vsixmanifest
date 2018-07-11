@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="RT.VisualStudio.0ef6b67b-483d-40af-ad45-9c83848e4a94" Version="1.0" Language="en-US" Publisher="RT" />
+    <Identity Id="RT.VisualStudio.0ef6b67b-483d-40af-ad45-9c83848e4a94" Version="1.1" Language="en-US" Publisher="RT" />
     <DisplayName>RT.VisualStudio</DisplayName>
     <Description xml:space="preserve">Assorted functionality for Visual Studio.</Description>
   </Metadata>
